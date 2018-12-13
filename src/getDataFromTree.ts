@@ -29,6 +29,16 @@ class Trie {
     });
     node.added = true;
   }
+
+  clear() {
+    if (this.children) {
+      this.children.forEach(node => {
+        node.clear();
+      });
+
+      this.children.clear();
+    }
+  }
 }
 
 export class RenderPromises {
@@ -80,6 +90,10 @@ export class RenderPromises {
     });
     this.queryPromises.clear();
     return Promise.all(promises);
+  }
+
+  public clear() {
+    this.queryGraveyard.clear();
   }
 }
 
@@ -137,9 +151,13 @@ export function getMarkupFromTree({
 
   function process(): Promise<string> | string {
     const html = renderFunction(React.createElement(RenderPromisesProvider));
-    return renderPromises.hasPromises()
-      ? renderPromises.consumeAndAwaitPromises().then(process)
-      : html;
+
+    if (renderPromises.hasPromises()) {
+      return renderPromises.consumeAndAwaitPromises().then(process);
+    }
+
+    renderPromises.clear();
+    return html;
   }
 
   return Promise.resolve().then(process);
