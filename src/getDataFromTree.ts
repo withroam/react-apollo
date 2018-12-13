@@ -151,14 +151,15 @@ export function getMarkupFromTree({
 
   function process(): Promise<string> | string {
     const html = renderFunction(React.createElement(RenderPromisesProvider));
-
-    if (renderPromises.hasPromises()) {
-      return renderPromises.consumeAndAwaitPromises().then(process);
-    }
-
-    renderPromises.clear();
-    return html;
+    return renderPromises.hasPromises()
+      ? renderPromises.consumeAndAwaitPromises().then(process)
+      : html;
   }
 
-  return Promise.resolve().then(process);
+  return Promise.resolve()
+    .then(process)
+    .then(html => {
+      renderPromises.clear();
+      return html;
+    });
 }
